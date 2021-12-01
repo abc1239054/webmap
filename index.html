@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>地形特徵圖台</title>
+    <link rel="icon" href="./assets/img/logo.jpg" type="image/icon type">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      @import "node_modules/ol/ol.css";
+      @import "node_modules/ol-layerswitcher/dist/ol-layerswitcher.css";
+      @import "style.css";
+    </style>
+
+  </head>
+  <body>
+    <div id="info"></div>
+    <div id="loading-page">
+      <div class="loader"></div>
+    </div>
+    
+    <div id="controlPanel">
+      <div id="controlPanelHeader">
+        <img src="./assets/img/movable.svg"/>
+      </div>
+      <div class="panel-name">地形特徵圖</div>
+      <div id="featuremapSelection">
+
+      </div>
+      <div class="panel-name">底圖</div>
+      <div id="basemapSelection">
+
+
+      </div>
+      <div class="panel-name">其他功能</div>
+      <div id="utility">
+        <label for="format">紙張大小</label>
+        <select id="format">
+          <option value="a0">A0 (慢)</option>
+          <option value="a1">A1</option>
+          <option value="a2">A2</option>
+          <option value="a3">A3</option>
+          <option value="a4" selected>A4</option>
+          <option value="a5">A5 (快)</option>
+        </select>
+        <label for="resolution">解析度</label>
+        <select id="resolution">
+          <option value="72">72 dpi (快)</option>
+          <option value="150">150 dpi</option>
+          <option value="300">300 dpi (慢)</option>
+        </select>
+        <button id="export">地圖輸出</button>
+      </div>
+    </div>
+
+    <div id="mousePosition">
+      <span>TWD97座標:&nbsp;&nbsp;</span>
+      <span id="xy">245354,&nbsp;&nbsp;2610267</span>
+    </div>
+    
+    
+    <div id="mapWindow"></div>
+    <div id="popup" class="ol-popup">
+      <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+      <div id="popup-content"></div>
+    </div>
+    <script src="./main.js" type="module"></script>
+  </body>
+</html>
