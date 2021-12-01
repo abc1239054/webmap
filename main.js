@@ -201,7 +201,7 @@ const getStyleFromJSON = async (styleJSON) => {
         }
 
         //載入WMTS服務XML
-        const wmtsHeader = await fetch('https://atlas.geo.ntnu.edu.tw/geoserver/gwc/service/wmts?REQUEST=GetCapabilities').then(res => res.text())
+        const wmtsHeader = await fetch('http://localhost:8080/geoserver/gwc/service/wmts?REQUEST=GetCapabilities').then(res => res.text())
         const result = parser.read(wmtsHeader)
 
         const optionsCaotun = optionsFromCapabilities(result, {
