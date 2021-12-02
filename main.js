@@ -12,6 +12,8 @@ import GeoJSON from 'ol/format/GeoJSON'
 import Overlay from 'ol/Overlay'
 import { DEVICE_PIXEL_RATIO } from 'ol/has';
 
+const serverUrl = 'https://atlas.geo.ntnu.edu.tw'
+
 const container = document.getElementById('popup')
 const content = document.getElementById('popup-content')
 const closer = document.getElementById('popup-closer')
@@ -144,12 +146,12 @@ const getStyleFromJSON = async (styleJSON) => {
     } else {
         iconOption = {
             crossOrigin: 'anonymous',
-            src: 'http://localhost:3001/api/legend/default_dot.png',
+            src: `${serverUrl}/api/legend/default_dot.png`,
             scale: 0.05
 
 
         }
-        iconSrc = 'http://localhost:3001/api/legend/default_dot.png'
+        iconSrc = `${serverUrl}/api/legend/default_dot.png`
     }
     const textOption = styleJSON.hasOwnProperty('text') ? getTextStyleFromJSON(styleJSON['text']) : getTextStyleFromJSON({})
 
@@ -171,11 +173,11 @@ const getStyleFromJSON = async (styleJSON) => {
         console.time('Loading')
 
         //載入向量圖層設定
-        const layerCollecttion = await fetch('http://localhost:3001/api/layers').then(res => res.json())
+        const layerCollecttion = await fetch(`${serverUrl}/api/layers`).then(res => res.json())
         const availableLayers = layerCollecttion.layers
         const vectorLayers = []
         const fetchPromises = availableLayers.map(async (layer) => {
-            const geojson = await fetch(`http://localhost:3001/api/geojson/${layer.name}`).then(res => res.json())
+            const geojson = await fetch(`${serverUrl}/api/geojson/${layer.name}`).then(res => res.json())
             const style = await getStyleFromJSON(layer.style)
             geojson.style = style
             return geojson
@@ -201,7 +203,7 @@ const getStyleFromJSON = async (styleJSON) => {
         }
 
         //載入WMTS服務XML
-        const wmtsHeader = await fetch('http://localhost:8080/geoserver/gwc/service/wmts?REQUEST=GetCapabilities').then(res => res.text())
+        const wmtsHeader = await fetch(`${serverUrl}/geoserver/gwc/service/wmts?REQUEST=GetCapabilities`).then(res => res.text())
         const result = parser.read(wmtsHeader)
 
         const optionsCaotun = optionsFromCapabilities(result, {
@@ -349,7 +351,7 @@ const getStyleFromJSON = async (styleJSON) => {
                             break
                         case 'image':
                             const img = document.createElement('img')
-                            img.src = `http://localhost:3001/api/img/${properties[k]}`
+                            img.src = `${serverUrl}/api/img/${properties[k]}`
                             img.className = 'feature-img'
                             c.appendChild(img)
                             break
