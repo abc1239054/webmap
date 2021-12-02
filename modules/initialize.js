@@ -121,12 +121,12 @@ const loadBaseSettings = (map) => {
 //載入地形特徵圖設定選項
 const loadLayerSettings = (map) => {
   const featureGroups = map.getLayerGroup().getLayers().getArray().filter(layer => layer.get('name') !== 'basemap')
-  console.log(featureGroups)
+
 
 
   featureGroups.forEach(group => {
     const groupName = group.get('name')
-    console.log(groupName)
+
     group.getLayersArray().forEach(layer => {
       const title = layer.get('title')
       const name = layer.get('name')
@@ -188,7 +188,7 @@ const loadLayerSettings = (map) => {
         collapseButton.title = '展開圖層選項'
         collapseButton.onclick = () => {
           const items = document.querySelectorAll(`.layer-item.feature.${groupName}`)
-          console.log(items)
+          //console.log(items)
           items.forEach(item => {
             item.classList.toggle('active')
             if(item.style.display === "flex") {
@@ -299,6 +299,23 @@ const exportToPdf = (map) => {
   map.getView().setResolution(viewResolution / scaling);
   //map.getView().setResolution(scaleResolution);
 }
+
+const collapsePanel = () => {
+  const restItems = document.querySelectorAll('#controlPanelHeader~div')
+  const collapsePanelButton = document.getElementById('collapsePanelButton')
+  restItems.forEach(item => {
+    item.classList.toggle('active')
+    if(item.style.display !== "none") {
+      item.style.display = "none"
+      collapsePanelButton.replaceChild(document.createTextNode('\u23F7'), collapsePanelButton.firstChild)
+    } else {
+      item.style.display = ""
+      collapsePanelButton.replaceChild(document.createTextNode('\u23F6'), collapsePanelButton.firstChild)
+    }
+  })
+}
+
+
 //呼叫上面函式初始化控制面板
 const setupPanel = (map) => {
   loadBaseSettings(map)
@@ -309,7 +326,8 @@ const setupPanel = (map) => {
   map.on('pointermove', (ev) => {
     readMousePosition(ev)
   })
-
+  const collapsePanelButton = document.getElementById('collapsePanelButton')
+  collapsePanelButton.onclick = collapsePanel
 }
 
 export { setupPanel, projection3826, projection3857 }
