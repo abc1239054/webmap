@@ -4,7 +4,7 @@
   "description": "Example using OpenLayers with Parcel",
   "scripts": {
     "start": "parcel serve index.html -p 3000",
-    "build": "parcel build --public-url . index.html"
+    "build": "parcel build --public-url . index.html && rm -rf ../webmap_build && cp -r ./dist ../ && mv ../dist ../webmap_build"
   },
   "dependencies": {
     "html2canvas": "^1.3.2",
