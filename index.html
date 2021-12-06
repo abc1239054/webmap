@@ -17,12 +17,16 @@
     <div id="loading-page">
       <div class="loader"></div>
     </div>
+    <div id="platform-title">
+      <a href="/">主題式地形圖展示平台</a>
+      <a href="https://sites.google.com/gapps.ntnu.edu.tw/projectmap">計畫介紹</a>
+    </div>
     
     <div id="controlPanel">
       <div id="controlPanelHeader">
         <img src="./assets/img/movable.svg"/>
         <div>圖層控制</div>
-        <div id="collapsePanelButton" class="collapse-button">&#9207;</div>
+        <div id="collapsePanelButton" class="collapse-button"><img src="./assets/img/up.svg" width="50%"/></div>
       </div>
       <div class="panel-name">地形特徵圖</div>
       <div id="featuremapSelection">
@@ -33,8 +37,9 @@
 
 
       </div>
-      <div class="panel-name">其他功能</div>
+      <div class="panel-name">地圖輸出</div>
       <div id="utility">
+        <div class="export-map">
         <label for="format">紙張大小</label>
         <select id="format">
           <option value="a0">A0 (慢)</option>
@@ -47,10 +52,11 @@
         <label for="resolution">解析度</label>
         <select id="resolution">
           <option value="72">72 dpi (快)</option>
-          <option value="150">150 dpi</option>
+          <option value="150" selected>150 dpi</option>
           <option value="300">300 dpi (慢)</option>
         </select>
-        <button id="export">地圖輸出</button>
+        <button id="export">輸出目前範圍</button>
+        </div>
       </div>
     </div>
 

@@ -89,6 +89,7 @@ const getPattern = async (url) => {
 
 
     const img = new Image(128, 128)
+    img.crossOrigin = "anonymous"
     img.src = url
     await img.decode()
     canvas.width = 128

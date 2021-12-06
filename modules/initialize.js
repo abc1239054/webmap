@@ -3,7 +3,9 @@ import { register } from 'ol/proj/proj4'
 import { get as getProjection, transform, transformExtent, getPointResolution } from 'ol/proj'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
-import { Vector as VectorLayer, Tile } from 'ol/layer' 
+import { Vector as VectorLayer, Tile } from 'ol/layer'
+import downSrc from '../assets/img/down.svg'
+import upSrc from '../assets/img/up.svg'
 
 proj4.defs(
   "EPSG:3826",
@@ -20,7 +22,7 @@ const readMousePosition = (ev) => {
   const coordinateReduced = coordinate.map(val => parseInt(val))
   //console.log(coordinateReduced)
   const mousePositionDiv = document.getElementById('mousePosition')
-  mousePositionDiv.innerHTML = `<span>&nbsp;TWD97座標:&nbsp;&nbsp;</span><span>${coordinateReduced[0]},&nbsp;&nbsp;${coordinateReduced[1]}</span>`
+  mousePositionDiv.innerHTML = `<span>TWD97座標:&nbsp;&nbsp;</span><span>${coordinateReduced[1]}mN,&nbsp;&nbsp;${coordinateReduced[0]}mE</span>`
 
 }
 
@@ -133,7 +135,7 @@ const loadLayerSettings = (map) => {
       //console.log(layer.get('legendSrc'))
       const featuremapSelection = document.getElementById('featuremapSelection')
       const el = document.createElement('div')
-      
+
 
       const inputbox = document.createElement('input')
       inputbox.type = 'checkbox'
@@ -151,18 +153,21 @@ const loadLayerSettings = (map) => {
       label.title = '縮放至圖層範圍'
       label.className = 'layer-name'
       label.appendChild(document.createTextNode(title))
-      label.style.cursor = 'pointer'
-      label.onclick = () => {
-        let extent3826, extent3857
-        if (layer instanceof VectorLayer) {
-          extent3857 = layer.getSource().getExtent()
-        }
-        else {
-          extent3826 = layer.getSource().getTileGrid().getExtent()
-          extent3857 = transformExtent(extent3826, projection3826, projection3857)
-        }
+      
+      if (layer instanceof Tile) {
+        label.style.cursor = 'pointer'
+        label.onclick = () => {
+          let extent3826, extent3857
+          if (layer instanceof VectorLayer) {
+            extent3857 = layer.getSource().getExtent()
+          }
+          else {
+            extent3826 = layer.getSource().getTileGrid().getExtent()
+            extent3857 = transformExtent(extent3826, projection3826, projection3857)
+          }
 
-        map.getView().fit(extent3857, map.getSize())
+          map.getView().fit(extent3857, map.getSize())
+        }
       }
       el.appendChild(label)
 
@@ -183,32 +188,39 @@ const loadLayerSettings = (map) => {
       if (layer instanceof Tile) {
         el.className = 'layer-item feature'
         const collapseButton = document.createElement('div')
+        const collapseButtonIcon = document.createElement('img')
+        collapseButtonIcon.src = downSrc
+        collapseButtonIcon.style.width = "50%"
         collapseButton.className = 'collapse-button'
-        collapseButton.appendChild(document.createTextNode('\u23F7'))
+
+        collapseButton.appendChild(collapseButtonIcon)
         collapseButton.title = '展開圖層選項'
         collapseButton.onclick = () => {
           const items = document.querySelectorAll(`.layer-item.feature.${groupName}`)
           //console.log(items)
           items.forEach(item => {
             item.classList.toggle('active')
-            if(item.style.display === "flex") {
+            if (item.style.display !== "none") {
               item.style.display = "none"
-              collapseButton.replaceChild(document.createTextNode('\u23F7'), collapseButton.firstChild)
+              collapseButtonIcon.src = downSrc
+
             } else {
-              item.style.display = "flex"
-              collapseButton.replaceChild(document.createTextNode('\u23F6'), collapseButton.firstChild)
+              item.style.display = ""
+              item.style.background = "#ffffff"
+              collapseButtonIcon.src = upSrc
+
             }
-            
+
           })
         }
         el.appendChild(collapseButton)
-        
+
       } else {
         el.className = `layer-item feature ${groupName}`
         el.style.display = "none"
         const collapseButton = document.createElement('div')
         collapseButton.className = 'collapse-button'
-        collapseButton.appendChild(document.createTextNode('\u23F7'))
+        collapseButton.style.width = '1.5rem'
         collapseButton.style.visibility = 'hidden'
         el.appendChild(collapseButton)
       }
@@ -220,10 +232,10 @@ const loadLayerSettings = (map) => {
 
 }
 
-//輸出成pdf目前有問題待解決
+//輸出成pdf
 const exportToPdf = (map) => {
-  //const loadingPage = document.getElementById("loading-page")
-  //loadingPage.style.display = 'flex'
+  const loadingPage = document.getElementById("loading-page")
+  loadingPage.style.display = ''
   const exportButton = document.getElementById('export')
   exportButton.disabled = true
   document.body.style.cursor = 'progress'
@@ -235,33 +247,23 @@ const exportToPdf = (map) => {
     a4: [297, 210],
     a5: [210, 148],
   }
-  //const format = document.getElementById('format').value;
-  //const resolution = document.getElementById('resolution').value;
-    //const scale = document.getElementById('scale').value;
-  //const dim = dims[format];
-  const format = 'a4'
-  const resolution = 300
-  const scale = 10
-  const dim = dims[format]
+  const format = document.getElementById('format').value;
+  const resolution = document.getElementById('resolution').value;
+  const dim = dims[format];
   const width = Math.round((dim[0] * resolution) / 25.4)
   const height = Math.round((dim[1] * resolution) / 25.4)
+  const size = map.getSize()
   const viewResolution = map.getView().getResolution()
-  const size = map.getSize();
-  const scaleResolution =
-    scale /
-    getPointResolution(
-      map.getView().getProjection(),
-      resolution / 25.4,
-      map.getView().getCenter()
-    )
+
   const exportOptions = {
     useCORS: true,
+    foreignObjectRendering: true,
+    width: width,
+    height: height,
   }
-
+  
   map.once('rendercomplete', () => {
-    exportOptions.width = width
-    exportOptions.height = height
-    html2canvas(map.getViewport(), exportOptions).then((canvas) => {
+    html2canvas(map.getTargetElement(), exportOptions).then((canvas) => {
       const pdf = new jsPDF('landscape', undefined, format);
       pdf.addImage(
         canvas.toDataURL('image/jpeg'),
@@ -273,44 +275,44 @@ const exportToPdf = (map) => {
       )
       pdf.save('map.pdf')
       // Reset original map size
-      //scaleLine.setDpi()
-      //map.getTargetElement().style.width = ''
-      //map.getTargetElement().style.height = ''
-      //map.updateSize()
-      map.setSize(size);
+      map.getTargetElement().style.width = ''
+      map.getTargetElement().style.height = ''
+      map.updateSize()
+
       map.getView().setResolution(viewResolution);
       exportButton.disabled = false
       document.body.style.cursor = 'auto'
-      //const loadingPage = document.getElementById("loading-page")
-      //loadingPage.style.display = 'none'
+      const loadingPage = document.getElementById("loading-page")
+      loadingPage.style.display = 'none'
+    }).catch(err => {
+      console.log(err.toString())
     })
   })
-  //scaleLine.setDpi(resolution);
   map.getTargetElement().style.width = width + 'px';
   map.getTargetElement().style.height = height + 'px';
   map.updateSize();
 
 
   const printSize = [width, height];
-  //map.setSize(printSize);
+  map.setSize(printSize);
   const scaling = Math.min(width / size[0], height / size[1]);
-  console.log(`width: ${width} height: ${height} viewResolution: ${viewResolution} scaleResolution: ${scaleResolution} size: ${size} printSize: ${printSize}`)
-
   map.getView().setResolution(viewResolution / scaling);
-  //map.getView().setResolution(scaleResolution);
 }
 
 const collapsePanel = () => {
   const restItems = document.querySelectorAll('#controlPanelHeader~div')
   const collapsePanelButton = document.getElementById('collapsePanelButton')
+  const collapsePanelIcon = collapsePanelButton.firstChild
   restItems.forEach(item => {
     item.classList.toggle('active')
-    if(item.style.display !== "none") {
+    if (item.style.display !== "none") {
       item.style.display = "none"
-      collapsePanelButton.replaceChild(document.createTextNode('\u23F7'), collapsePanelButton.firstChild)
+      collapsePanelIcon.src = downSrc
+      //.replaceChild(document.createTextNode('\u23F7'), collapsePanelButton.firstChild)
     } else {
       item.style.display = ""
-      collapsePanelButton.replaceChild(document.createTextNode('\u23F6'), collapsePanelButton.firstChild)
+      collapsePanelIcon.src = upSrc
+      //collapsePanelButton.replaceChild(document.createTextNode('\u23F6'), collapsePanelButton.firstChild)
     }
   })
 }
@@ -321,8 +323,8 @@ const setupPanel = (map) => {
   loadBaseSettings(map)
   loadLayerSettings(map)
   dragElement(document.getElementById('controlPanel'))
-  //const exportButton = document.getElementById('export')
-  //exportButton.onclick = () => exportToPdf(map)
+  const exportButton = document.getElementById('export')
+  exportButton.onclick = () => exportToPdf(map)
   map.on('pointermove', (ev) => {
     readMousePosition(ev)
   })
