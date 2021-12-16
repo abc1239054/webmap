@@ -82,6 +82,8 @@ hr {
 
 #controlPanel {
   position: absolute;
+  max-height: 90%;
+  overflow-y: auto;
   width: 20rem;
   top: 1.2rem;
   right: 1.2rem;

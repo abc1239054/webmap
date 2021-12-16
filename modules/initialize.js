@@ -150,12 +150,12 @@ const loadLayerSettings = (map) => {
 
       const label = document.createElement('label')
       label.for = name
-      label.title = '縮放至圖層範圍'
       label.className = 'layer-name'
       label.appendChild(document.createTextNode(title))
       
       if (layer instanceof Tile) {
-        label.style.cursor = 'pointer'
+        label.title = '縮放至圖層範圍'
+ 	label.style.cursor = 'pointer'
         label.onclick = () => {
           let extent3826, extent3857
           if (layer instanceof VectorLayer) {
