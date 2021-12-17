@@ -120,117 +120,113 @@ const loadBaseSettings = (map) => {
 
 }
 
+const createLayerItem = (layer, map) => {
+  const title = layer.get('title')
+  const name = layer.get('name')
+  const el = document.createElement('div')
+
+  const inputbox = document.createElement('input')
+  inputbox.type = 'checkbox'
+  inputbox.className = 'inputbox'
+  inputbox.checked = true
+  inputbox.onchange = () => {
+    if (!(layer instanceof Tile)) {
+      const inputboxs = document.querySelectorAll(`.layer-item.feature.${layer.get('name')} > input[type='checkbox']`)
+      inputboxs.forEach(box => {
+        box.checked = inputbox.checked
+      })
+    }
+    layer.setVisible(inputbox.checked)
+  }
+  el.appendChild(inputbox)
+
+  const label = document.createElement('label')
+  label.for = name
+  label.className = 'layer-name'
+  label.appendChild(document.createTextNode(title))
+  if (layer instanceof Tile) {
+    label.title = '縮放至圖層範圍'
+    label.style.cursor = 'pointer'
+    label.onclick = () => {
+
+      let extent3826 = layer.getSource().getTileGrid().getExtent()
+      let extent3857 = transformExtent(extent3826, projection3826, projection3857)
+      map.getView().fit(extent3857, map.getSize())
+    }
+  }
+  el.appendChild(label)
+
+  const scrollBar = document.createElement('input')
+  scrollBar.className = 'opacity'
+  scrollBar.title = '透明度'
+  scrollBar.type = 'range'
+  scrollBar.min = 0
+  scrollBar.max = 1
+  scrollBar.step = 0.01
+  scrollBar.oninput = () => {
+    layer.setOpacity(parseFloat(scrollBar.value))
+  }
+  el.appendChild(scrollBar)
+
+  return el
+}
+
+
 //載入地形特徵圖設定選項
 const loadLayerSettings = (map) => {
-  const featureGroups = map.getLayerGroup().getLayers().getArray().filter(layer => layer.get('name') !== 'basemap')
+  const featureGroup = map.getLayerGroup().getLayers().getArray().find(layer => layer.get('name') === 'feature')
+  const tileLayers = featureGroup.getLayersArray().filter(layer => layer instanceof Tile)
+  const vectorLayers = featureGroup.getLayersArray().filter(layer => !(layer instanceof Tile))
 
+  tileLayers.forEach(layer => {
+    const featuremapSelection = document.getElementById('featuremapSelection')
+    const layerItem = createLayerItem(layer, map)
 
+    layerItem.className = 'layer-item feature'
+    const collapseButton = document.createElement('div')
+    const collapseButtonIcon = document.createElement('img')
+    collapseButtonIcon.src = downSrc
+    collapseButtonIcon.style.width = "50%"
+    collapseButton.className = 'collapse-button'
 
-  featureGroups.forEach(group => {
-    const groupName = group.get('name')
+    collapseButton.appendChild(collapseButtonIcon)
+    collapseButton.title = '展開圖層選項'
+    collapseButton.onclick = () => {
+      const items = document.querySelectorAll(`.layer-item.feature.${layer.get('name')}`)
+      //console.log(items)
+      items.forEach(item => {
+        item.classList.toggle('active')
+        if (item.style.display !== "none") {
+          item.style.display = "none"
+          collapseButtonIcon.src = downSrc
 
-    group.getLayersArray().forEach(layer => {
-      const title = layer.get('title')
-      const name = layer.get('name')
-      //console.log(layer.get('legendSrc'))
-      const featuremapSelection = document.getElementById('featuremapSelection')
-      const el = document.createElement('div')
+        } else {
+          item.style.display = ""
+          item.style.background = "#ffffff"
+          collapseButtonIcon.src = upSrc
 
-
-      const inputbox = document.createElement('input')
-      inputbox.type = 'checkbox'
-      inputbox.id = name
-      inputbox.className = 'inputbox'
-      inputbox.checked = true
-      inputbox.onchange = () => {
-        layer.setVisible(inputbox.checked)
-      }
-      el.appendChild(inputbox)
-
-
-      const label = document.createElement('label')
-      label.for = name
-      label.className = 'layer-name'
-      label.appendChild(document.createTextNode(title))
-      
-      if (layer instanceof Tile) {
-        label.title = '縮放至圖層範圍'
- 	label.style.cursor = 'pointer'
-        label.onclick = () => {
-          let extent3826, extent3857
-          if (layer instanceof VectorLayer) {
-            extent3857 = layer.getSource().getExtent()
-          }
-          else {
-            extent3826 = layer.getSource().getTileGrid().getExtent()
-            extent3857 = transformExtent(extent3826, projection3826, projection3857)
-          }
-
-          map.getView().fit(extent3857, map.getSize())
         }
-      }
-      el.appendChild(label)
 
+      })
+    }
+    layerItem.appendChild(collapseButton)
+    featuremapSelection.appendChild(layerItem)
 
-      const scrollBar = document.createElement('input')
-      scrollBar.className = 'opacity'
-      scrollBar.title = '透明度'
-      scrollBar.type = 'range'
-      scrollBar.min = 0
-      scrollBar.max = 1
-      scrollBar.step = 0.01
-      scrollBar.oninput = () => {
-        layer.setOpacity(parseFloat(scrollBar.value))
-      }
-      el.appendChild(scrollBar)
-
-
-      if (layer instanceof Tile) {
-        el.className = 'layer-item feature'
-        const collapseButton = document.createElement('div')
-        const collapseButtonIcon = document.createElement('img')
-        collapseButtonIcon.src = downSrc
-        collapseButtonIcon.style.width = "50%"
-        collapseButton.className = 'collapse-button'
-
-        collapseButton.appendChild(collapseButtonIcon)
-        collapseButton.title = '展開圖層選項'
-        collapseButton.onclick = () => {
-          const items = document.querySelectorAll(`.layer-item.feature.${groupName}`)
-          //console.log(items)
-          items.forEach(item => {
-            item.classList.toggle('active')
-            if (item.style.display !== "none") {
-              item.style.display = "none"
-              collapseButtonIcon.src = downSrc
-
-            } else {
-              item.style.display = ""
-              item.style.background = "#ffffff"
-              collapseButtonIcon.src = upSrc
-
-            }
-
-          })
-        }
-        el.appendChild(collapseButton)
-
-      } else {
-        el.className = `layer-item feature ${groupName}`
-        el.style.display = "none"
-        const collapseButton = document.createElement('div')
-        collapseButton.className = 'collapse-button'
-        collapseButton.style.width = '1.5rem'
-        collapseButton.style.visibility = 'hidden'
-        el.appendChild(collapseButton)
-      }
-
-
-      featuremapSelection.appendChild(el)
+    vectorLayers.forEach(vectorLayer => {
+      const subLayerItem = createLayerItem(vectorLayer, map)
+      subLayerItem.className = `layer-item feature ${layer.get('name')} ${vectorLayer.get('name')}`
+      subLayerItem.style.display = "none"
+      const collapseButton = document.createElement('div')
+      collapseButton.className = 'collapse-button'
+      collapseButton.style.width = '1.5rem'
+      collapseButton.style.visibility = 'hidden'
+      subLayerItem.appendChild(collapseButton)
+      featuremapSelection.appendChild(subLayerItem)
     })
-  })
 
+  })
 }
+
 
 //輸出成pdf
 const exportToPdf = (map) => {
@@ -261,7 +257,7 @@ const exportToPdf = (map) => {
     width: width,
     height: height,
   }
-  
+
   map.once('rendercomplete', () => {
     html2canvas(map.getTargetElement(), exportOptions).then((canvas) => {
       const pdf = new jsPDF('landscape', undefined, format);
@@ -308,11 +304,9 @@ const collapsePanel = () => {
     if (item.style.display !== "none") {
       item.style.display = "none"
       collapsePanelIcon.src = downSrc
-      //.replaceChild(document.createTextNode('\u23F7'), collapsePanelButton.firstChild)
     } else {
       item.style.display = ""
       collapsePanelIcon.src = upSrc
-      //collapsePanelButton.replaceChild(document.createTextNode('\u23F6'), collapsePanelButton.firstChild)
     }
   })
 }
