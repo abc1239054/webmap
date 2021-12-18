@@ -30,12 +30,33 @@ const overlay = new Overlay({
     },
 });
 
+let selected = null
+
 closer.onclick = () => {
     overlay.setPosition(undefined);
     closer.blur();
+    if (selected !== null) {
+        selected.setStyle(undefined)
+        highlightStyle.setFill(undefined)
+        selected = null;
+    }
     return false;
 };
 
+//圈選用的樣式
+const highlightStyle = new Style({
+    stroke: new Stroke({
+      color: '#ff0000',
+      width: 4,
+    }),
+    image: new Icon({
+        color: 'rgba(255, 0, 0, 1.0)',
+        crossOrigin: 'anonymous',
+        src: `${serverUrl}/api/legend/default_dot.svg`,
+        scale: 0.7,
+    })
+    
+})
 
 const levelsEMAP = 20
 const levelsCaotun = 12
@@ -196,9 +217,10 @@ const getStyleFromJSON = async (styleJSON) => {
                 source: new VectorSource({
                     features: new GeoJSON().readFeatures(geojson),
                 }),
-                style: geojson.style,
+                //style: geojson.style,
                 legendSrc: geojson.style.legendSrc,
             })
+            vectorLayer.setStyle(geojson.style)
             vectorLayers.push(vectorLayer)
 
 
@@ -340,21 +362,27 @@ const getStyleFromJSON = async (styleJSON) => {
         })
 
         //設定POP-UP視窗功能
+ 
         map.on('click', (ev) => {
+            if (selected !== null) {
+                selected.setStyle(undefined)
+                highlightStyle.setFill(undefined)
+                selected = null
+            }
+            
 
             const feature = map.forEachFeatureAtPixel(ev.pixel,
-                (feature) => {
+                (feature, layer) => {
+                    selected = feature
+                    const originFillStyle = layer.getStyle().getFill()
+                    highlightStyle.setFill(originFillStyle) 
+                    selected.setStyle(highlightStyle)
                     return feature
                 }, {
                 hitTolerance: 7
             })
             console.log(feature)
             if (feature) {
-                const rowInfo = {
-                    landform: 0,
-                    def: 1,
-                    image: 2
-                }
                 const properties = feature.getProperties()
                 delete properties['geometry']
                 delete properties['layer']
