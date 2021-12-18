@@ -1,5 +1,8 @@
 import { Map, View } from 'ol'
 import { Group, Vector as VectorLayer, Tile } from 'ol/layer'
+import MVT from 'ol/format/MVT';
+import VectorTileLayer from 'ol/layer/VectorTile';
+import VectorTileSource from 'ol/source/VectorTile';
 import WMTSTileGrid from 'ol/tilegrid/WMTS'
 import { Fill, Stroke, Style, Text, Icon, Circle } from 'ol/style'
 import { getWidth, getTopLeft, getHeight, getBottomLeft } from 'ol/extent'
@@ -7,10 +10,10 @@ import WMTS, { optionsFromCapabilities } from 'ol/source/WMTS'
 import WMTSCapabilities from 'ol/format/WMTSCapabilities'
 import { setupPanel, projection3826, projection3857 } from './modules/initialize'
 import { ScaleLine, defaults as defaultControls } from 'ol/control'
-import VectorSource from 'ol/source/Vector'
-import GeoJSON from 'ol/format/GeoJSON'
+//import VectorSource from 'ol/source/Vector'
+//import GeoJSON from 'ol/format/GeoJSON'
 import Overlay from 'ol/Overlay'
-import { DEVICE_PIXEL_RATIO } from 'ol/has';
+//import { DEVICE_PIXEL_RATIO } from 'ol/has';
 
 const serverUrl = 'https://atlas.geo.ntnu.edu.tw'
 
@@ -48,7 +51,6 @@ const tileMatrixesCaotun = {
 }
 
 const parser = new WMTSCapabilities()
-
 
 const projectionExtent3857 = projection3857.getExtent()
 const projectionExtent3826 = [
@@ -127,7 +129,6 @@ const getStyleFromJSON = async (styleJSON) => {
             pat = await getPattern(styleJSON.fill.src)
             fillSrc = styleJSON.fill.src
         } else if (styleJSON.fill.hasOwnProperty('color')) {
-            console.log('shit')
             pat = styleJSON.fill.color
         }
     }
@@ -154,9 +155,8 @@ const getStyleFromJSON = async (styleJSON) => {
         }
         iconSrc = `${serverUrl}/api/legend/default_dot.png`
     }
+
     const textOption = styleJSON.hasOwnProperty('text') ? getTextStyleFromJSON(styleJSON['text']) : getTextStyleFromJSON({})
-
-
 
     const style = new Style({
         fill: new Fill(fillOption),
@@ -177,7 +177,7 @@ const getStyleFromJSON = async (styleJSON) => {
         const layerCollecttion = await fetch(`${serverUrl}/api/layers`).then(res => res.json())
         const availableLayers = layerCollecttion.layers
         const vectorLayers = []
-        const fetchPromises = availableLayers.map(async (layer) => {
+        /*const fetchPromises = availableLayers.map(async (layer) => {
             const geojson = await fetch(`${serverUrl}/api/geojson/${layer.name}`).then(res => res.json())
             const style = await getStyleFromJSON(layer.style)
             geojson.style = style
@@ -187,8 +187,9 @@ const getStyleFromJSON = async (styleJSON) => {
         //載入向量圖層
         const geojsons = await Promise.all(fetchPromises)
 
+
         //初始化載入的圖層
-        for (const geojson of geojsons) {
+        geojsons.forEach(geojson => {
             let vectorLayer = new VectorLayer({
                 title: geojson.title,
                 name: geojson.name,
@@ -201,7 +202,36 @@ const getStyleFromJSON = async (styleJSON) => {
             vectorLayers.push(vectorLayer)
 
 
-        }
+        })*/
+
+        //初始化向量圖磚資訊
+        const fetchPromises = availableLayers.map(async (layer) => {
+            const style = await getStyleFromJSON(layer.style)
+            const vectorInfo = {}
+            vectorInfo.title = layer.title
+            vectorInfo.name = layer.name
+            vectorInfo.style = style
+            vectorInfo.url = `${serverUrl}/api/tile/${layer.name}/{z}/{x}/{y}.mvt`
+            return vectorInfo
+        })
+
+        //載入向量圖磚資訊
+        const vectorInfos = await Promise.all(fetchPromises)
+
+        //初始化載入的向量圖磚圖層
+        vectorInfos.forEach(info => {
+            let vectorLayer = new VectorTileLayer({
+                title: info.title,
+                name: info.name,
+                source: new VectorTileSource({
+                    format: new MVT(),
+                    url: info.url,
+                }),
+                style: info.style,
+                legendSrc: info.style.legendSrc,
+            })
+            vectorLayers.push(vectorLayer)
+        })
 
         //載入WMTS服務XML
         const wmtsHeader = await fetch(`${serverUrl}/geoserver/gwc/service/wmts?REQUEST=GetCapabilities`).then(res => res.text())
@@ -321,18 +351,19 @@ const getStyleFromJSON = async (styleJSON) => {
             console.log(feature)
             if (feature) {
                 const rowInfo = {
-                    topo_name: 0,
-                    text: 1,
+                    landform: 0,
+                    def: 1,
                     image: 2
                 }
                 const properties = feature.getProperties()
                 delete properties['geometry']
+                delete properties['layer']
 
                 const table = document.createElement('table')
                 let r, c
                 const keys = Object.keys(properties)
                 keys.forEach((k) => {
-                    r = table.insertRow(rowInfo[k])
+                    r = table.insertRow()
                     c = r.insertCell(0)
                     switch (k) {
                         case 'geometry':
