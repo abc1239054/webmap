@@ -1,8 +1,8 @@
 import { Map, View } from 'ol'
-import { Group, Vector as VectorLayer, Tile } from 'ol/layer'
-import MVT from 'ol/format/MVT';
-import VectorTileLayer from 'ol/layer/VectorTile';
-import VectorTileSource from 'ol/source/VectorTile';
+import { Group, Tile, VectorImage as VectorImageLayer } from 'ol/layer'
+//import MVT from 'ol/format/MVT';
+//import VectorTileLayer from 'ol/layer/VectorTile';
+//import VectorTileSource from 'ol/source/VectorTile';
 import WMTSTileGrid from 'ol/tilegrid/WMTS'
 import { Fill, Stroke, Style, Text, Icon, Circle } from 'ol/style'
 import { getWidth, getTopLeft, getHeight, getBottomLeft } from 'ol/extent'
@@ -10,8 +10,8 @@ import WMTS, { optionsFromCapabilities } from 'ol/source/WMTS'
 import WMTSCapabilities from 'ol/format/WMTSCapabilities'
 import { setupPanel, projection3826, projection3857 } from './modules/initialize'
 import { ScaleLine, defaults as defaultControls } from 'ol/control'
-//import VectorSource from 'ol/source/Vector'
-//import GeoJSON from 'ol/format/GeoJSON'
+import VectorSource from 'ol/source/Vector'
+import GeoJSON from 'ol/format/GeoJSON'
 import Overlay from 'ol/Overlay'
 //import { DEVICE_PIXEL_RATIO } from 'ol/has';
 
@@ -177,7 +177,7 @@ const getStyleFromJSON = async (styleJSON) => {
         const layerCollecttion = await fetch(`${serverUrl}/api/layers`).then(res => res.json())
         const availableLayers = layerCollecttion.layers
         const vectorLayers = []
-        /*const fetchPromises = availableLayers.map(async (layer) => {
+        const fetchPromises = availableLayers.map(async (layer) => {
             const geojson = await fetch(`${serverUrl}/api/geojson/${layer.name}`).then(res => res.json())
             const style = await getStyleFromJSON(layer.style)
             geojson.style = style
@@ -190,7 +190,7 @@ const getStyleFromJSON = async (styleJSON) => {
 
         //初始化載入的圖層
         geojsons.forEach(geojson => {
-            let vectorLayer = new VectorLayer({
+            let vectorLayer = new VectorImageLayer({
                 title: geojson.title,
                 name: geojson.name,
                 source: new VectorSource({
@@ -202,8 +202,8 @@ const getStyleFromJSON = async (styleJSON) => {
             vectorLayers.push(vectorLayer)
 
 
-        })*/
-
+        })
+	/*
         //初始化向量圖磚資訊
         const fetchPromises = availableLayers.map(async (layer) => {
             const style = await getStyleFromJSON(layer.style)
@@ -232,7 +232,7 @@ const getStyleFromJSON = async (styleJSON) => {
             })
             vectorLayers.push(vectorLayer)
         })
-
+        */
         //載入WMTS服務XML
         const wmtsHeader = await fetch(`${serverUrl}/geoserver/gwc/service/wmts?REQUEST=GetCapabilities`).then(res => res.text())
         const result = parser.read(wmtsHeader)
