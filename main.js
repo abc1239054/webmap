@@ -350,7 +350,7 @@ const getStyleFromJSON = async (styleJSON) => {
                     title: "圖徵",
                     name: "feature",
                     fold: "open",
-                    layers: [muzha, caotun, ...vectorLayers, chenggong],
+                    layers: [muzha, caotun, chenggong, ...vectorLayers],
                 }),
             ],
             overlays: [overlay],
